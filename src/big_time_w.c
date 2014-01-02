@@ -1,7 +1,7 @@
 // Standard includes
 #include "pebble.h"
 
-#define TOTAL_IMAGE_SLOTS 4
+#define TOTAL_IMAGE_SLOTS 6
 
 #define NUMBER_OF_IMAGES 10
 
@@ -13,6 +13,13 @@ const int IMAGE_RESOURCE_IDS[NUMBER_OF_IMAGES] = {
       RESOURCE_ID_IMAGE_NUM_3, RESOURCE_ID_IMAGE_NUM_4, RESOURCE_ID_IMAGE_NUM_5,
       RESOURCE_ID_IMAGE_NUM_6, RESOURCE_ID_IMAGE_NUM_7, RESOURCE_ID_IMAGE_NUM_8,
       RESOURCE_ID_IMAGE_NUM_9
+};
+
+const int SMALL_IMAGE_RESOURCE_IDS[NUMBER_OF_IMAGES] = {
+      RESOURCE_ID_IMAGE_NUM_S_0, RESOURCE_ID_IMAGE_NUM_S_1, RESOURCE_ID_IMAGE_NUM_S_2,
+      RESOURCE_ID_IMAGE_NUM_S_3, RESOURCE_ID_IMAGE_NUM_S_4, RESOURCE_ID_IMAGE_NUM_S_5,
+      RESOURCE_ID_IMAGE_NUM_S_6, RESOURCE_ID_IMAGE_NUM_S_7, RESOURCE_ID_IMAGE_NUM_S_8,
+      RESOURCE_ID_IMAGE_NUM_S_9
 };
 
 const int CONN_RESOURCE_IDS[2] = {
@@ -27,6 +34,7 @@ const int BATT_RESOURCE_IDS[12] = {
 };
 
 static GBitmap *numbers[NUMBER_OF_IMAGES];
+static GBitmap *s_numbers[NUMBER_OF_IMAGES];
 static GBitmap *conns[2];
 static GBitmap *batteries[12];
 
@@ -54,70 +62,36 @@ static const char* const TENS[] = {
   "VENTI", "TRENTA", "QUARANTA", "CINQUANTA"
 };
 
-static const int position[NUMBER_OF_IMAGES][2][2] ={
+static const int position[TOTAL_IMAGE_SLOTS][2][2] ={
   {{16,12},{56,62}},
   {{72,12},{56,62}},
   {{16,80},{56,62}},
-  {{72,80},{56,62}}
+  {{72,80},{56,62}},
+  {{20,146},{14,20}},
+  {{35,146},{14,20}}
 };
-
-enum Modes {
-    mode_text,
-    mode_seconds,
-    mode_seconds_dt,
-    mode_seconds_st,
-    mode_none
-};
-
-static short int icDown = 0;
-
-static BitmapLayer *image_containers[TOTAL_IMAGE_SLOTS];
-static BitmapLayer *battery_layer;
-static BitmapLayer *conn_layer;
 
 #define EMPTY_SLOT -1
 
 static int image_slot_state[TOTAL_IMAGE_SLOTS] = {EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT};
 
-// App-specific data
 static Layer *window_layer;
-static Window *window; // All apps must have at least one window
+static BitmapLayer *image_containers[TOTAL_IMAGE_SLOTS];
+static BitmapLayer *battery_layer;
+static BitmapLayer *conn_layer;
 static TextLayer *status_layer;
-static short int mode = mode_seconds_dt;
-static char conn_text[10]    = "          ";
+static Window *window; 
 static char battery_text[10] = "          ";
 static char date_text[24]    = "                        ";
-static char dt_text[24]    = "                        ";
-static char seconds[24]      = "                        ";
-
-void update_seconds(char* res, int sec) {
-    strcpy(res, "");
-    if (sec < 10) {
-        strcat(res, ONES[sec]);
-        return;  
-    }
-    if (sec < 20) {
-        strcat(res, TEENS[sec-10]);
-        return;  
-    }
-    int ones_val = sec % 10; 
-    int tens_val = sec / 10;
-    
-    strcpy(res, TENS[tens_val - 2]);
-    if (ones_val == 1 || ones_val == 8) {
-        res[strlen(res)-1] = '\0';
-    }
-    if (ones_val>0) strcat(res, ONES[ones_val]);
-}
   
 static void do_deinit(void) {
   tick_timer_service_unsubscribe();
   battery_state_service_unsubscribe();
   bluetooth_connection_service_unsubscribe();
-  accel_tap_service_unsubscribe();
   
   for (int i = 0; i < NUMBER_OF_IMAGES; i++) {
     gbitmap_destroy(numbers[i]);
+    gbitmap_destroy(s_numbers[i]);
   }
   
   for (int i = 0; i < 2; i++) {
@@ -150,11 +124,16 @@ static void handle_battery(BatteryChargeState charge_state) {
 
 void load_digit_image_into_slot(int slot_number, int digit_value) {
   image_slot_state[slot_number] = digit_value;
-  bitmap_layer_set_bitmap(image_containers[slot_number], numbers[digit_value]);
+  if (slot_number>3) {
+    bitmap_layer_set_bitmap(image_containers[slot_number], s_numbers[digit_value]);
+  } else {
+    bitmap_layer_set_bitmap(image_containers[slot_number], numbers[digit_value]);
+  }
 }
 
 void display_value(unsigned short value, unsigned short row_number, bool show_first_leading_zero) {
   value = value % 100; 
+  
   for (int column_number = 1; column_number >= 0; column_number--) {
     int slot_number = (row_number * 2) + column_number;
     if (!((value == 0) && (column_number == 0) && !show_first_leading_zero)) {
@@ -164,122 +143,32 @@ void display_value(unsigned short value, unsigned short row_number, bool show_fi
   }
 }
 
-void int2str(int value, char* res) {
-  char ten_val = 48;
-  char one_val = 48;
-  
-  memset(res, 0, sizeof(res));
-  
-  if (value>=10) {
-    one_val =  48 + (value % 10);
-    value = value / 10;
-    ten_val = 48 + value;
-  } else {
-    one_val = 48 + value;
-  }
-  res[0] = (char) ten_val;
-  res[1] = (char) one_val;
-  res[2] = '\0';
-}
-
 unsigned short get_display_hour(unsigned short hour) {
-
   if (clock_is_24h_style()) {
     return hour;
   }
-
   unsigned short display_hour = hour % 12;
-
   return display_hour ? display_hour : 12;
 }
 
 void update_date(struct tm *tick_time) {
-  static char date_day[9] = "xxxxxxxxx";
-  static char date_day_n[2] = "00";
-  static char date_mon[9] = "yyy";
-  
-  strcpy(date_day, DOWS[tick_time->tm_wday]);
-  int2str(tick_time->tm_mday,date_day_n);
-  strcpy(date_mon, MONTHS[tick_time->tm_mon]);
-  
-  snprintf(date_text, 24, "%s %u %s", date_day, tick_time->tm_mday, date_mon);
-  strcpy(date_day, DOWS_SHORT[tick_time->tm_wday]);
-  snprintf(dt_text, 24, "%s %u %s", date_day, tick_time->tm_mday, date_mon);
+  snprintf(date_text, 24, "%s %u %s", DOWS_SHORT[tick_time->tm_wday], tick_time->tm_mday, MONTHS[tick_time->tm_mon]);
 }
 
 static void handle_bluetooth(bool connected) {
   bitmap_layer_set_bitmap(conn_layer, conns[connected?0:1]);
 }
 
-static void handle_accel(AccelAxisType axis, int32_t direction) {
-  //if (axis == ACCEL_AXIS_Z) {
-    text_layer_set_text(status_layer, "TAP!");
-    icDown = 3;
-  //};
-}
-
 static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
-  char sec[2] = "00";
   static int day_m = 40;
-  
-  if (icDown > 0) {
-    icDown--;
-    return;
-  }
-
-  if (icDown == 0) {
-    icDown--;
-    text_layer_set_text(status_layer, "");
-    for (int slot_number = 0; slot_number < TOTAL_IMAGE_SLOTS; slot_number++) {
-      if (mode == mode_none) {
-        layer_set_frame(bitmap_layer_get_layer(image_containers[slot_number]), 
-          GRect(position[slot_number][0][0], position[slot_number][0][1]+(6 * (1+ slot_number/2)), position[slot_number][1][0], position[slot_number][1][1]));
-      } else {
-        layer_set_frame(bitmap_layer_get_layer(image_containers[slot_number]), 
-          GRect(position[slot_number][0][0], position[slot_number][0][1], position[slot_number][1][0], position[slot_number][1][1]));
-      }
-    }
-  }
   if (day_m != tick_time->tm_mday) {
     day_m = tick_time->tm_mday;
     update_date(tick_time);
+    text_layer_set_text(status_layer, date_text);
   }
-
-  layer_set_hidden((Layer*) status_layer, false);
-      
-  switch (mode) {
-    case mode_text:
-      update_seconds(seconds, tick_time->tm_sec);
-      text_layer_set_text(status_layer, seconds);
-      break;
-    case mode_seconds:
-      int2str(tick_time->tm_sec, sec);
-      text_layer_set_text(status_layer, sec);
-      break;
-    case mode_seconds_dt:
-      int2str(tick_time->tm_sec, sec);
-      strcpy(seconds, sec);
-      strcat(seconds, " - ");
-      strcat(seconds, dt_text);
-      text_layer_set_text(status_layer, seconds);
-      break;
-    case mode_seconds_st:
-      int2str(tick_time->tm_sec, sec);
-      strcpy(seconds, sec);
-      strcat(seconds, " - ");
-      strcat(seconds, conn_text);
-      strcat(seconds, " - ");
-      strcat(seconds, battery_text);
-      text_layer_set_text(status_layer, seconds);
-      break;
-    case mode_none:
-      text_layer_set_text(status_layer, "");
-      layer_set_hidden((Layer*) status_layer, true);
-      break;
-  }
-
   display_value(get_display_hour(tick_time->tm_hour), 0, true);
-  display_value(tick_time->tm_min, 1, true);
+  display_value(tick_time->tm_min, 1, true);  
+  display_value(tick_time->tm_sec, 2, true);
   handle_battery(battery_state_service_peek());
 }
 
@@ -289,12 +178,13 @@ static void do_init(void) {
   window_stack_push(window, true);
   window_layer = window_get_root_layer(window);
   
-  status_layer = text_layer_create(GRect(16, 148, 112, 30));
+  status_layer = text_layer_create(GRect(50, 148, 80, 30));
   text_layer_set_text_alignment(status_layer, GTextAlignmentCenter);
   text_layer_set_text(status_layer, "");
   
   for (int i = 0; i < NUMBER_OF_IMAGES; i++) {
     numbers[i] = gbitmap_create_with_resource(IMAGE_RESOURCE_IDS[i]);
+    s_numbers[i] = gbitmap_create_with_resource(SMALL_IMAGE_RESOURCE_IDS[i]);
   }
   
   for (int i = 0; i < 2; i++) {
@@ -317,7 +207,7 @@ static void do_init(void) {
     image_containers[slot_number] = bitmap_layer_create(
         GRect(position[slot_number][0][0], position[slot_number][0][1], position[slot_number][1][0], position[slot_number][1][1]));
     
-    load_digit_image_into_slot(slot_number, slot_number+6);
+    load_digit_image_into_slot(slot_number, 0);
     layer_add_child(window_layer, bitmap_layer_get_layer(image_containers[slot_number]));
   }
   
@@ -330,8 +220,7 @@ static void do_init(void) {
   tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
   battery_state_service_subscribe(&handle_battery);
   bluetooth_connection_service_subscribe(&handle_bluetooth);
-  accel_tap_service_subscribe(&handle_accel);
-
+  
   layer_add_child(window_layer, text_layer_get_layer(status_layer));
   
   window_set_background_color(window, GColorWhite);
@@ -341,7 +230,6 @@ static void do_init(void) {
 
   layer_add_child(window_layer, bitmap_layer_get_layer(conn_layer));
   layer_add_child(window_layer, bitmap_layer_get_layer(battery_layer));
-
 }
 
 int main(void) {

@@ -74,6 +74,56 @@
         },
         {
           "type": "png",
+          "name": "IMAGE_NUM_S_0",
+          "file": "images/small/num_0.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_1",
+          "file": "images/small/num_1.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_2",
+          "file": "images/small/num_2.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_3",
+          "file": "images/small/num_3.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_4",
+          "file": "images/small/num_4.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_5",
+          "file": "images/small/num_5.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_6",
+          "file": "images/small/num_6.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_7",
+          "file": "images/small/num_7.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_8",
+          "file": "images/small/num_8.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_S_9",
+          "file": "images/small/num_9.png"
+        },
+        {
+          "type": "png",
           "name": "BATT_0",
           "file": "images/batt_0.png"
         },

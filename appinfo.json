@@ -1,0 +1,147 @@
+{
+  "uuid": "c1d7ebc9b2824163988f50cfacb7bcd2",
+  "shortName": "Big Time",
+  "longName": "Big Time",
+  "companyName": "rheeze",
+  "versionCode": 2,
+  "versionLabel": "2.0.0",
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {},
+  "resources": {
+    "media": [
+        {
+          "type": "png",
+          "name": "IMAGE_MENU_ICON",
+          "file": "images/menu_icon_time_enh.png",
+          "menu_icon": true
+        },
+        {
+          "type": "font",
+          "name": "ROBOTO_BOLD_16",
+          "file": "fonts/Roboto-Condensed-Bold.ttf"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_0",
+          "file": "images/num_0.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_1",
+          "file": "images/num_1.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_2",
+          "file": "images/num_2.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_3",
+          "file": "images/num_3.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_4",
+          "file": "images/num_4.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_5",
+          "file": "images/num_5.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_6",
+          "file": "images/num_6.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_7",
+          "file": "images/num_7.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_8",
+          "file": "images/num_8.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_NUM_9",
+          "file": "images/num_9.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_0",
+          "file": "images/batt_0.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_10",
+          "file": "images/batt_10.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_20",
+          "file": "images/batt_20.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_30",
+          "file": "images/batt_30.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_40",
+          "file": "images/batt_40.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_50",
+          "file": "images/batt_50.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_60",
+          "file": "images/batt_60.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_70",
+          "file": "images/batt_70.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_80",
+          "file": "images/batt_80.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_90",
+          "file": "images/batt_90.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_100",
+          "file": "images/batt_100.png"
+        },
+        {
+          "type": "png",
+          "name": "BATT_CH",
+          "file": "images/batt_ch.png"
+        },
+        {
+          "type": "png",
+          "name": "CONN",
+          "file": "images/conn.png"
+        },
+        {
+          "type": "png",
+          "name": "DISC",
+          "file": "images/disc.png"
+        }
+    ]
+  }
+}

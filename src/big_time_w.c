@@ -63,18 +63,18 @@ static const char* const TENS[] = {
 };
 
 static const int position[TOTAL_IMAGE_SLOTS][2][2] = {
-  {{30,12},{38,62}},
-  {{72,12},{38,62}},
-  {{30,80},{38,62}},
-  {{72,80},{38,62}},
-  {{20,146},{14,20}},
-  {{35,146},{14,20}}
+  {{12,20},{38,62}},
+  {{50,20},{38,62}},
+  {{12,86},{38,62}},
+  {{50,86},{38,62}},
+  {{107,22},{12,20}},
+  {{120,22},{12,20}}
 };
 
 static const int layers[3][2][2] = {
-  {{50, 148}, {80, 30}},
-  {{4, 147}, {12, 17}},
-  {{128, 147}, {12, 17}}
+  {{100, 52}, {36, 120}},
+  {{104, 128}, {12, 17}},
+  {{119, 128}, {12, 17}}
 };
 
 #define EMPTY_SLOT -1
@@ -158,7 +158,7 @@ unsigned short get_display_hour(unsigned short hour) {
 }
 
 void update_date(struct tm *tick_time) {
-  snprintf(date_text, 24, "%s %u %s", DOWS_SHORT[tick_time->tm_wday], tick_time->tm_mday, MONTHS[tick_time->tm_mon]);
+  snprintf(date_text, 24, "%s\n%02u\n%s\n%u", DOWS_SHORT[tick_time->tm_wday], tick_time->tm_mday, MONTHS[tick_time->tm_mon], (1900 + tick_time->tm_year));
 }
 
 static void handle_bluetooth(bool connected) {

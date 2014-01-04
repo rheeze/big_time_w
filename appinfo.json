@@ -1,10 +1,10 @@
 {
   "uuid": "c1d7ebc9b2824163988f50cfacb7bcd2",
-  "shortName": "Big Time",
-  "longName": "Big Time",
+  "shortName": "Big Digits",
+  "longName": "Big Digits EN",
   "companyName": "rheeze",
-  "versionCode": 2,
-  "versionLabel": "2.0.0",
+  "versionCode": 1,
+  "versionLabel": "1.0.1",
   "watchapp": {
     "watchface": true
   },
@@ -12,10 +12,10 @@
   "resources": {
     "media": [
         {
+          "menuIcon": true,
           "type": "png",
           "name": "IMAGE_MENU_ICON",
-          "file": "images/menu_icon_time_enh.png",
-          "menu_icon": true
+          "file": "images/menu_icon_time_enh.png"
         },
         {
           "type": "font",

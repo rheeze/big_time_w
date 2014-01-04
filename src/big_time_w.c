@@ -5,7 +5,9 @@
 
 #define NUMBER_OF_IMAGES 10
 
-#define LANGUAGE 1
+// Italian 0
+// English 1
+#define LANGUAGE 0
 
 // These images are 38 x 62 pixels (i.e. a quarter of the display),
 // black and white with the digit character centered in the image.

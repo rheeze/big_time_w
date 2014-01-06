@@ -43,27 +43,27 @@ const int BATT_RESOURCE_IDS[12] = {
 
 #if LANGUAGE == 0
 #include "italian.h"
-#endif
-
-#if LANGUAGE == 1 
+#elif LANGUAGE == 1 
 #include "english.h"
 #endif
-
 
 static const int position[TOTAL_IMAGE_SLOTS][2][2] = {
   {{12,17},{38,62}},
   {{54,17},{38,62}},
   {{12,89},{38,62}},
   {{54,89},{38,62}},
-  {{104,19},{12,20}},
-  {{119,19},{12,20}}
+  {{104,35},{12,20}},
+  {{119,35},{12,20}}
 };
 
-static const int layers[3][2][2] = {
-  {{100, 52}, {36, 120}},
+static const int layers[4][2][2] = {
+  {{100, 62}, {36, 120}},
   {{102, 134}, {12, 16}},
-  {{119, 134}, {12, 16}}
+  {{122, 134}, {12, 16}},
+  {{100, 16}, {36, 16}}
 };
+
+static TextLayer *ampm_layer;
 
 #define EMPTY_SLOT -1
 
@@ -95,6 +95,7 @@ static void do_deinit(void) {
   text_layer_destroy(date_layer);
   bitmap_layer_destroy(conn_layer);
   bitmap_layer_destroy(battery_layer);
+  text_layer_destroy(ampm_layer);
   window_destroy(window);
 }
 
@@ -183,6 +184,28 @@ static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
   static int day_m = 40;
   static int hour_m = 33;
   static int min_m = 77;
+  static bool clock24 = false;
+  
+  if (clock24 != clock_is_24h_style()) {
+    clock24 = clock_is_24h_style();
+    for (int slot_number = 4; slot_number < TOTAL_IMAGE_SLOTS; slot_number++) {
+      GRect bounds = layer_get_frame(bitmap_layer_get_layer(digit_slot[slot_number]));
+      if (clock24) {
+        bounds.origin.y = 19;
+      } else {
+        bounds.origin.y = 35;
+      }
+      layer_set_frame(bitmap_layer_get_layer(digit_slot[slot_number]), bounds);
+    }
+    GRect bounds = layer_get_frame(text_layer_get_layer(date_layer));
+    if (clock24) {
+      bounds.origin.y = 52;
+    } else {
+      bounds.origin.y = 62;
+    }
+    layer_set_frame(text_layer_get_layer(date_layer), bounds);
+    layer_set_hidden((Layer *)ampm_layer, clock24);
+  }
   
   if (day_m != tick_time->tm_mday) {
     day_m = tick_time->tm_mday;
@@ -192,7 +215,15 @@ static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
   if (hour_m != tick_time->tm_hour) {
     hour_m = tick_time->tm_hour;
     display_value(get_display_hour(tick_time->tm_hour), 0, true);
+    if (!clock_is_24h_style()) {
+      if (hour_m >=12) {
+        text_layer_set_text(ampm_layer, "PM");
+      } else {
+        text_layer_set_text(ampm_layer, "AM");
+      }
+    }
   }
+    
   if (min_m != tick_time->tm_min) {
     min_m = tick_time->tm_min;
     display_value(tick_time->tm_min, 1, true);  
@@ -210,15 +241,12 @@ static void do_init(void) {
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   text_layer_set_text(date_layer, "");
   
-  /*
-  for (int i = 0; i < 2; i++) {
-    conns[i] = gbitmap_create_with_resource(CONN_RESOURCE_IDS[i]);
-  }
-  
-  for (int i = 0; i < 12; i++) {
-    batteries[i] = gbitmap_create_with_resource(BATT_RESOURCE_IDS[i]);
-  }
-  */
+  ampm_layer = text_layer_create(GRect(layers[3][0][0],layers[3][0][1],layers[3][1][0],layers[3][1][1]));
+  text_layer_set_text_alignment(ampm_layer, GTextAlignmentCenter);
+  text_layer_set_text(ampm_layer, "");
+  text_layer_set_text_color(date_layer, GColorBlack);
+  text_layer_set_background_color(date_layer, GColorWhite);
+  text_layer_set_font(date_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_BOLD_16)));
   
   conn_layer = bitmap_layer_create(
     GRect(layers[1][0][0],layers[1][0][1],layers[1][1][0],layers[1][1][1]));
@@ -228,6 +256,7 @@ static void do_init(void) {
     GRect(layers[2][0][0],layers[2][0][1],layers[2][1][0],layers[2][1][1]));
   load_icon_into_layer(0, bitmap_layer_get_layer(battery_layer));
   
+  int adj = 0;
   for (int slot_number = 0; slot_number < TOTAL_IMAGE_SLOTS; slot_number++) {
     digit_slot[slot_number] = bitmap_layer_create(
         GRect(position[slot_number][0][0], position[slot_number][0][1], position[slot_number][1][0], position[slot_number][1][1]));
@@ -256,6 +285,8 @@ static void do_init(void) {
 
   layer_add_child(window_layer, bitmap_layer_get_layer(conn_layer));
   layer_add_child(window_layer, bitmap_layer_get_layer(battery_layer));
+  
+  layer_add_child(window_layer, text_layer_get_layer(ampm_layer));
 }
 
 int main(void) {
